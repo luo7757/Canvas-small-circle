@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body{
+            margin: 0;
+        }
+        #canvas{
+            background-color: #000;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <script src="../../../JS工具库/Jquery/jQuery.js"></script>
+    <script>
+        $(function(){
+            const canvas = $('#canvas')[0];
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            window.onresize = function(){
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            // move移动就在鼠标位置上 生成元素
+            // 随机x，y的值 在当前位置上 vx vy变化
+            // 根据关键帧动画 来动态刷新 元素的位置 每次都会清空画布
+            // 对象 圆形彩块：x,y 当前坐标  颜色 大小 
+            // 随机值的方法 ： x y的方向 
+            // 递减透明度的方法 ： 
+            // 数组保存 元素 监控元素的透明度为0时，在数组中删除 ,同时每次是根据数组中的元素数量来生成 
+            let circleList = [];            
+
+            class Circle{
+                constructor(x,y){
+                    this.x = x;//当前的坐标
+                    this.y = y;
+                    this.vx = (Math.random() - 0.5) * 3;//随机一个方向及速度
+                    this.vy = (Math.random() - 0.5) * 3;
+                    this.color = `rgb(${this.random(0,255)},${this.random(0,255)},${this.random(0,255)})`;
+                    this.a = 1;//透明度
+                    this.h = this.random(15,30);//随机半径
+                }
+                random(min,max){
+                    return ~~(Math.random() * (max - min) + min);
+                }
+                draw(){//画圆
+                    ctx.beginPath();
+                    ctx.fillStyle = this.color;
+                    ctx.globalAlpha = this.a;	//设置全局透明度，画布里每个圆都会有
+				    ctx.globalCompositeOperation = 'lighter';	//设置图形重叠时的显示方式
+                    ctx.arc(this.x, this.y, this.h, 0, Math.PI * 2);
+                    // x,y 起始位置  h 半径    0 起始弧度   Math.PI * 2  结束弧度 
+                    ctx.fill();
+                    // ctx.closePath();
+                    this.update();
+                }
+                update(){//更新 透明度、位置 
+                    this.a *= 0.98;
+                    this.x += this.vx;
+                    this.y += this.vy;
+                }
+            }
+
+            canvas.addEventListener('mousemove',function(e){
+                // let a = new Circle(e.clientX,e.clientY);
+                // a.draw();
+                circleList.push(new Circle(e.clientX,e.clientY));
+            })
+
+            function render(){
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                circleList.forEach((ele, i) => {
+                    ele.draw();
+                    if(ele.a < 0.01) circleList.splice(i, 1);
+                })
+                requestAnimationFrame(render);
+            }
+            render();
+        })
+    </script>
+</body>
+</html>
